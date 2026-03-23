@@ -8,6 +8,7 @@ from livekit.agents import (
     AgentSession,
     JobContext,
     JobProcess,
+    TurnHandlingOptions,
     cli,
     function_tool,
     inference,
@@ -66,26 +67,14 @@ async def my_agent(ctx: JobContext):
     }
 
     session = AgentSession(
-        llm=google.realtime.RealtimeModel(
-            model="gemini-2.5-flash-native-audio-preview-12-2025", 
-            voice="Sulafat",
-            realtime_input_config=types.RealtimeInputConfig(
-                automatic_activity_detection=types.AutomaticActivityDetection(
-                    start_of_speech_sensitivity=types.StartSensitivity.START_SENSITIVITY_LOW,
-                    end_of_speech_sensitivity=types.EndSensitivity.END_SENSITIVITY_LOW,
-                    silence_duration_ms=500,
-                    prefix_padding_ms=150,
-                )
-            ),
+        stt=inference.STT(model="deepgram/nova-3", language="multi"),
+        vad=ctx.proc.userdata["vad"],
+        turn_detection=MultilingualModel(),
+        llm=inference.LLM(model="openai/gpt-4.1-mini"),
+        tts=inference.TTS(
+            model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
         ),
-        # stt=inference.STT(model="deepgram/nova-3", language="multi"),
-        # llm=inference.LLM(model="openai/gpt-4.1-mini"),
-        # tts=inference.TTS(
-        #     model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
-        # ),
-        # turn_detection=MultilingualModel(),
-        # vad=ctx.proc.userdata["vad"],
-        # preemptive_generation=True,
+        preemptive_generation=True,
     )
 
     await session.start(
